@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "description": "Chrome extension to clip academic papers into Obsidian vault as markdown.",
+  "license": "MIT",
   "scripts": {
     "build": "node build.mjs",
     "watch": "node build.mjs --watch"
