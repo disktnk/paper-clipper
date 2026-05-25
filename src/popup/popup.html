@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Paper Clipper</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Paper Clipper</h1>
+      <button id="open-options" type="button" title="Options">⚙</button>
+    </header>
+
+    <section id="status" class="status">Detecting…</section>
+
+    <section id="meta" class="meta hidden">
+      <div class="field"><label>File</label><code id="filename"></code></div>
+      <div class="field"><label>Title</label><span id="title"></span></div>
+      <div class="field"><label>Authors</label><span id="authors"></span></div>
+      <div class="field"><label>Year</label><span id="year"></span></div>
+      <div class="field"><label>Source</label><code id="source"></code></div>
+    </section>
+
+    <section id="actions" class="actions hidden">
+      <button id="save" type="button" class="primary">Save to vault</button>
+      <label class="checkbox"><input type="checkbox" id="overwrite" /> overwrite</label>
+    </section>
+
+    <section id="error" class="error hidden"></section>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>

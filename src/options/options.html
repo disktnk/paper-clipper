@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Paper Clipper · Options</title>
+  <link rel="stylesheet" href="options.css" />
+</head>
+<body>
+  <main>
+    <h1>Paper Clipper · Options</h1>
+
+    <section>
+      <h2>Template file</h2>
+      <p>Pick the .md template file. It can live anywhere on disk.</p>
+      <div class="row">
+        <button id="pick-template" type="button" class="primary">Pick template file…</button>
+        <code id="template-name">(not set)</code>
+      </div>
+      <p id="template-status" class="muted"></p>
+    </section>
+
+    <section>
+      <h2>Save folder</h2>
+      <p>Pick the folder where new markdown notes will be written.</p>
+      <div class="row">
+        <button id="pick-save" type="button" class="primary">Pick save folder…</button>
+        <code id="save-name">(not set)</code>
+      </div>
+      <p id="save-status" class="muted"></p>
+    </section>
+
+    <section>
+      <h2>Citekey pattern</h2>
+      <p>
+        Better-BibTeX-style expression. Built-in tokens:
+        <code>auth</code>, <code>auth(N)</code>, <code>authors</code>,
+        <code>lastauthor</code>, <code>year</code>, <code>title</code>,
+        <code>journal</code>, <code>itemtype</code>,
+        <code>shorttitle(N,M)</code>.
+        Filters: <code>.lower</code>, <code>.upper</code>,
+        <code>.capitalize</code>, <code>.clean</code>, <code>.nopunct</code>,
+        <code>.condense</code>.
+      </p>
+      <label>
+        Pattern
+        <input id="citekey-pattern" type="text" />
+      </label>
+      <p class="muted">
+        Default: <code>auth.lower + "_" + shorttitle(3,3).lower + "_" + year</code>
+      </p>
+      <div class="row">
+        <input id="preview-doi" type="text" placeholder="DOI / arXiv ID / PMID for preview (optional)" />
+        <button id="preview-btn" type="button">Preview</button>
+      </div>
+      <p id="preview-out" class="muted"></p>
+    </section>
+
+    <section class="footer">
+      <button id="save-settings" type="button" class="primary">Save</button>
+      <span id="saved-flash" class="muted hidden">Saved.</span>
+    </section>
+  </main>
+  <script src="options.js"></script>
+</body>
+</html>

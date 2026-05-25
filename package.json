@@ -1,0 +1,17 @@
+{
+  "name": "paper-clipper",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Chrome extension to clip academic papers into Obsidian vault as markdown.",
+  "scripts": {
+    "build": "node build.mjs",
+    "watch": "node build.mjs --watch"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0"
+  },
+  "dependencies": {
+    "nunjucks": "^3.2.4"
+  }
+}
