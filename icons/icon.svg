@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="512" height="512">
+  <!-- background: rounded square with subtle gradient -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3b82f6"/>
+      <stop offset="1" stop-color="#1d4ed8"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="128" height="128" rx="24" ry="24" fill="url(#bg)"/>
+
+  <!-- document (paper) with folded corner -->
+  <g transform="translate(24,18)">
+    <!-- shadow -->
+    <path d="M4 8
+             Q4 4 8 4
+             L48 4
+             L70 24
+             L70 92
+             Q70 96 66 96
+             L8 96
+             Q4 96 4 92
+             Z"
+          fill="#000000" opacity="0.18"/>
+    <!-- paper body -->
+    <path d="M0 6
+             Q0 0 6 0
+             L46 0
+             L68 22
+             L68 88
+             Q68 94 62 94
+             L6 94
+             Q0 94 0 88
+             Z"
+          fill="#ffffff"/>
+    <!-- folded corner -->
+    <path d="M46 0 L68 22 L48 22 Q46 22 46 20 Z" fill="#cbd5e1"/>
+    <!-- text lines on the paper -->
+    <rect x="10" y="34" width="48" height="4" rx="2" fill="#94a3b8"/>
+    <rect x="10" y="44" width="48" height="4" rx="2" fill="#94a3b8"/>
+    <rect x="10" y="54" width="36" height="4" rx="2" fill="#94a3b8"/>
+    <rect x="10" y="64" width="48" height="4" rx="2" fill="#94a3b8"/>
+    <rect x="10" y="74" width="30" height="4" rx="2" fill="#94a3b8"/>
+  </g>
+
+  <!-- paperclip: drawn as a single stroked path forming the classic shape, rotated -30deg -->
+  <g transform="rotate(-28 80 78)">
+    <!-- subtle shadow under clip -->
+    <path d="M62 38
+             L62 92
+             A14 14 0 0 0 90 92
+             L90 48
+             A10 10 0 0 0 70 48
+             L70 84
+             A6 6 0 0 0 82 84
+             L82 56"
+          fill="none"
+          stroke="#0f172a"
+          stroke-opacity="0.25"
+          stroke-width="11"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          transform="translate(1.5,2)"/>
+    <!-- the clip itself -->
+    <path d="M62 38
+             L62 92
+             A14 14 0 0 0 90 92
+             L90 48
+             A10 10 0 0 0 70 48
+             L70 84
+             A6 6 0 0 0 82 84
+             L82 56"
+          fill="none"
+          stroke="#f8fafc"
+          stroke-width="9"
+          stroke-linecap="round"
+          stroke-linejoin="round"/>
+  </g>
+</svg>
