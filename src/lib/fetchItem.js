@@ -9,14 +9,28 @@ import { buildBibliography } from "./bibliography.js";
 
 export async function fetchItem(ident, { citekeyPattern } = {}) {
   if (!ident) throw new Error("No identifier detected on this page.");
-  let item;
+
+  let base = await getCachedBase(ident);
+  if (!base) {
+    base = await fetchBase(ident);
+    await setCachedBase(ident, base);
+  }
+
+  const item = { ...base };
+  item.citekey = generateCitekey(item, citekeyPattern);
+  item.importDate = new Date().toISOString();
+  item.relations = [];
+  item.attachments = [];
+  item.bibliography = await buildBibliography(item);
+  return item;
+}
+
+async function fetchBase(ident) {
   switch (ident.kind) {
     case "doi":
-      item = await fetchCrossref(ident.id);
-      break;
-    case "arxiv":
-      item = await fetchArxiv(ident.id);
-      // Enrich with Crossref if a DOI was discovered (preferred journal article metadata)
+      return await fetchCrossref(ident.id);
+    case "arxiv": {
+      let item = await fetchArxiv(ident.id);
       if (item.DOI) {
         try {
           const cr = await fetchCrossref(item.DOI);
@@ -25,9 +39,10 @@ export async function fetchItem(ident, { citekeyPattern } = {}) {
           // ignore, arXiv data is fine
         }
       }
-      break;
-    case "pmid":
-      item = await fetchPubmed(ident.id);
+      return item;
+    }
+    case "pmid": {
+      let item = await fetchPubmed(ident.id);
       if (item.DOI) {
         try {
           const cr = await fetchCrossref(item.DOI);
@@ -36,17 +51,26 @@ export async function fetchItem(ident, { citekeyPattern } = {}) {
           // ignore
         }
       }
-      break;
+      return item;
+    }
     default:
       throw new Error(`Unknown identifier kind: ${ident.kind}`);
   }
+}
 
-  item.citekey = generateCitekey(item, citekeyPattern);
-  item.importDate = new Date().toISOString();
-  item.relations = [];
-  item.attachments = [];
-  item.bibliography = await buildBibliography(item);
-  return item;
+const CACHE_PREFIX = "paperclipper:item:";
+const cacheKey = (ident) => `${CACHE_PREFIX}${ident.kind}:${ident.id}`;
+
+async function getCachedBase(ident) {
+  if (!globalThis.chrome?.storage?.session) return null;
+  const key = cacheKey(ident);
+  const obj = await chrome.storage.session.get(key);
+  return obj[key] ?? null;
+}
+
+async function setCachedBase(ident, item) {
+  if (!globalThis.chrome?.storage?.session) return;
+  await chrome.storage.session.set({ [cacheKey(ident)]: item });
 }
 
 function stripEmpty(obj) {
