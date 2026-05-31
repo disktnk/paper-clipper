@@ -10,7 +10,7 @@
   ],
   "host_permissions": [
     "https://api.crossref.org/*",
-    "https://export.arxiv.org/*",
+    "https://api.datacite.org/*",
     "https://eutils.ncbi.nlm.nih.gov/*",
     "https://api.openalex.org/*"
   ],

@@ -1,53 +1,78 @@
-// arXiv API client. Returns Zotero-compatible item dict.
-// http://export.arxiv.org/api/query?id_list=...
+// arXiv metadata client. Returns Zotero-compatible item dict.
+//
+// We resolve metadata via DataCite instead of export.arxiv.org. Every arXiv
+// paper is registered with a DOI of the form 10.48550/arXiv.<id> in DataCite,
+// whose API returns full metadata and is not subject to the aggressive per-IP
+// rate limiting (HTTP 429 "Rate exceeded") that export.arxiv.org applies at its
+// CDN layer. https://api.datacite.org/dois/10.48550/arXiv.<id>
 
 export async function fetchArxiv(id) {
-  const url = `https://export.arxiv.org/api/query?id_list=${encodeURIComponent(id)}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`arXiv ${res.status} for ${id}`);
-  const xml = await res.text();
-  return arxivXmlToItem(xml, id);
+  const doi = `10.48550/arXiv.${id}`;
+  const url = `https://api.datacite.org/dois/${encodeURIComponent(doi)}`;
+  const res = await fetch(url, { headers: { Accept: "application/vnd.api+json" } });
+  if (!res.ok) throw new Error(`arXiv (DataCite) ${res.status} for ${id}`);
+  const json = await res.json();
+  return dataciteToItem(json?.data?.attributes ?? {}, id);
 }
 
-function arxivXmlToItem(xml, id) {
-  const doc = new DOMParser().parseFromString(xml, "application/xml");
-  const entry = doc.querySelector("entry");
-  if (!entry) throw new Error(`arXiv: no entry for ${id}`);
+function dataciteToItem(attr, id) {
+  const titles = Array.isArray(attr.titles) ? attr.titles : [];
+  const title = (titles[0]?.title || "").replace(/\s+/g, " ").trim();
 
-  const text = (sel) => {
-    const el = entry.querySelector(sel);
-    return el ? el.textContent.trim() : "";
-  };
+  const creators = (Array.isArray(attr.creators) ? attr.creators : [])
+    .filter((c) => (c.nameType ?? "Personal") !== "Organizational")
+    .map((c) => {
+      let firstName = (c.givenName || "").trim();
+      let lastName = (c.familyName || "").trim();
+      if (!lastName) {
+        // Fall back to parsing "Last, First" or "First Last".
+        const name = (c.name || "").trim();
+        if (name.includes(",")) {
+          const [last, first] = name.split(",", 2);
+          lastName = last.trim();
+          firstName = (first || "").trim();
+        } else {
+          const parts = name.split(/\s+/);
+          lastName = parts.pop() || name;
+          firstName = parts.join(" ");
+        }
+      }
+      return { creatorType: "author", firstName, lastName };
+    });
 
-  const authors = Array.from(entry.querySelectorAll("author > name")).map((n) => {
-    const full = n.textContent.trim();
-    const parts = full.split(/\s+/);
-    const lastName = parts.pop() || full;
-    const firstName = parts.join(" ");
-    return { creatorType: "author", firstName, lastName };
-  });
+  // Prefer the submission date for a full YYYY-MM-DD; fall back to issued/year.
+  const dates = Array.isArray(attr.dates) ? attr.dates : [];
+  const byType = (t) => dates.find((d) => d.dateType === t)?.date || "";
+  const fullDate = byType("Submitted") || byType("Issued") || byType("Available") || "";
+  const year = String(attr.publicationYear || fullDate.slice(0, 4) || "");
+  const date = /^\d{4}-\d{2}-\d{2}/.test(fullDate) ? fullDate.slice(0, 10) : year;
 
-  const published = text("published");
-  const year = published ? published.slice(0, 4) : "";
-  const title = text("title").replace(/\s+/g, " ");
-  const abs = text("summary").replace(/\s+/g, " ").trim();
+  const descriptions = Array.isArray(attr.descriptions) ? attr.descriptions : [];
+  const abs = (
+    descriptions.find((d) => d.descriptionType === "Abstract")?.description ||
+    descriptions[0]?.description ||
+    ""
+  )
+    .replace(/\s+/g, " ")
+    .trim();
 
+  // A journal/conference DOI, if the preprint has since been published, lives in
+  // relatedIdentifiers. Surface it so downstream CrossRef enrichment can run.
   let doi = "";
-  for (const link of entry.querySelectorAll("link")) {
-    if (link.getAttribute("title") === "doi") {
-      const href = link.getAttribute("href") || "";
-      const m = href.match(/10\.\d{4,9}\/[\-._;()/:A-Z0-9]+/i);
-      if (m) doi = m[0];
+  for (const rel of Array.isArray(attr.relatedIdentifiers) ? attr.relatedIdentifiers : []) {
+    if ((rel.relatedIdentifierType || "").toUpperCase() !== "DOI") continue;
+    const candidate = (rel.relatedIdentifier || "").trim();
+    if (candidate && !/^10\.48550\/arxiv\./i.test(candidate)) {
+      doi = candidate;
+      break;
     }
   }
-  const doiEl = entry.querySelector("arxiv\\:doi, doi");
-  if (!doi && doiEl) doi = doiEl.textContent.trim();
 
   return {
     itemType: "preprint",
     title,
-    creators: authors,
-    date: published.slice(0, 10),
+    creators,
+    date,
     year,
     DOI: doi,
     url: `https://arxiv.org/abs/${id}`,
